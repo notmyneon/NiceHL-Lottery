@@ -1,8 +1,223 @@
-Driftless Hockey Club.png
-Rockaway Brattwursts.png
-Bowness Ice Beavers.png
-Mt Pearl Vikings.png
-Scotty.png
-Potomac Poutine.png
-Maplewood HC.png
-Cantuar Slough Sharks.png
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>2025 NiceHL Draft Lottery Simulator</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    #header img {
+      max-height: 80px;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    #lotteryTable {
+      margin: 20px auto;
+      border-collapse: collapse;
+      font-size: 14px;
+      width: 300px;
+    }
+
+    #lotteryTable th,
+    #lotteryTable td {
+      border: 1px solid white;
+      padding: 4px 8px;
+    }
+
+    #pickResult {
+      margin: 10px 0;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    button {
+      background-color: white;
+      color: black;
+      border: none;
+      padding: 8px 16px;
+      margin: 10px 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background-color: #ccc;
+    }
+
+    #pickHistory {
+      margin-top: 20px;
+    }
+
+    ol {
+      padding-left: 1.5em;
+      text-align: left;
+      display: inline-block;
+    }
+
+    #winnerDisplay {
+      margin-top: 30px;
+    }
+
+    #winnerDisplay img {
+      max-height: 150px;
+      margin: 20px auto;
+      display: block;
+    }
+
+    #winnerDisplay h2 {
+      color: gold;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <img src="logo.png" alt="NiceHL Logo" />
+    <h1>NiceHL Draft Lottery</h1>
+  </div>
+
+  <table id="lotteryTable">
+    <thead>
+      <tr>
+        <th>Team</th>
+        <th>Odds</th>
+      </tr>
+    </thead>
+    <tbody id="lotteryBody">
+      <!-- Rows added by JS -->
+    </tbody>
+  </table>
+
+  <button onclick="drawPick()">Draw Team</button>
+  <button onclick="resetLottery()">Reset</button>
+
+  <div id="pickResult"></div>
+
+  <div id="pickHistory">
+    <h2>Pick Order</h2>
+    <ol id="historyList"></ol>
+  </div>
+
+  <!-- Winner announcement -->
+  <div id="winnerDisplay"></div>
+
+  <script>
+    let teams = [
+      { name: "Driftless Hockey Club", odds: 300 },
+      { name: "Rockaway Brattwursts", odds: 200 },
+      { name: "Bowness Ice Beavers", odds: 150 },
+      { name: "Mt Pearl Vikings", odds: 120 },
+      { name: "Scotty", odds: 100 },
+      { name: "Potomac Poutine", odds: 60 },
+      { name: "Maplewood HC", odds: 50 },
+      { name: "Cantuar Slough Sharks", odds: 20 }
+    ];
+
+    let remainingTeams = [];
+    let picks = [];
+
+    function resetLottery() {
+      remainingTeams = JSON.parse(JSON.stringify(teams));
+      picks = [];
+      document.getElementById("pickResult").innerText = "";
+      document.getElementById("winnerDisplay").innerHTML = "";
+      updateTable();
+      updatePickHistory();
+    }
+
+    function updateTable() {
+      let tbody = document.querySelector("#lotteryTable tbody");
+      tbody.innerHTML = "";
+      let totalOdds = remainingTeams.reduce((sum, t) => sum + t.odds, 0);
+      for (let team of teams) {
+        let tr = document.createElement("tr");
+        let tdName = document.createElement("td");
+        tdName.textContent = team.name;
+        let currentTeam = remainingTeams.find(t => t.name === team.name);
+        let currentOdds = currentTeam ? currentTeam.odds : 0;
+        let tdOdds = document.createElement("td");
+        tdOdds.textContent = totalOdds
+          ? ((currentOdds / totalOdds) * 100).toFixed(1) + "%"
+          : "0.0%";
+        tr.appendChild(tdName);
+        tr.appendChild(tdOdds);
+        tbody.appendChild(tr);
+      }
+    }
+
+    function updatePickHistory() {
+      let pickHistory = document.getElementById("pickHistory");
+      pickHistory.innerHTML = "<h3>Pick History</h3>";
+      if (picks.length === 0) {
+        pickHistory.innerHTML += "<p>No picks yet.</p>";
+      } else {
+        let ol = document.createElement("ol");
+        picks.forEach((p) => {
+          let li = document.createElement("li");
+          li.textContent = p;
+          ol.appendChild(li);
+        });
+        pickHistory.appendChild(ol);
+      }
+    }
+
+    function drawPick() {
+      if (remainingTeams.length === 0) {
+        document.getElementById("pickResult").innerText = "All picks completed!";
+        return;
+      }
+
+      let totalOdds = remainingTeams.reduce((sum, t) => sum + t.odds, 0);
+      let rand = Math.random() * totalOdds;
+      let cumulative = 0;
+      for (let i = 0; i < remainingTeams.length; i++) {
+        cumulative += remainingTeams[i].odds;
+        if (rand <= cumulative) {
+          let picked = remainingTeams[i];
+          document.getElementById("pickResult").innerText = `Selected: ${picked.name}`;
+          picks.push(picked.name);
+          remainingTeams.splice(i, 1);
+          updateTable();
+          updatePickHistory();
+
+          // If this was the last pick, show winner display
+          if (remainingTeams.length === 0) {
+            showWinner(picks[0]); // First pick is the winner
+          }
+
+          return;
+        }
+      }
+    }
+
+    function showWinner(teamName) {
+      const winnerDiv = document.getElementById("winnerDisplay");
+      const safeName = teamName.replace(/[^a-z0-9]/gi, '_'); // Basic sanitization
+      const imgPath = `${teamName}.png`; // assuming all team logos are in the same directory and named exactly
+
+      winnerDiv.innerHTML = `
+        <h2>🏆 Congratulations to ${teamName} for winning the #1 pick! 🏆</h2>
+        <img src="${imgPath}" alt="${teamName} logo">
+      `;
+    }
+
+    window.onload = resetLottery;
+  </script>
+</body>
+</html>
