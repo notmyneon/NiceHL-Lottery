@@ -47,63 +47,90 @@
   <button onclick="drawPick()">Draw Next Pick</button>
   <button onclick="resetLottery()">Reset Lottery</button>
 
-  <script>
-    let teams = [
-      { name: "Driftless Hockey Club", odds: 300 },
-      { name: "Rockaway Brattwursts", odds: 200 },
-      { name: "Bowness Ice Beavers", odds: 150 },
-      { name: "Mt Pearl Vikings", odds: 120 },
-      { name: "Scotty", odds: 100 },
-      { name: "Potomac Poutine", odds: 60 },
-      { name: "Maplewood HC", odds: 50 },
-      { name: "Cantuar Slough Sharks", odds: 20 }
-    ];
-    let remainingTeams = [];
+<script>
+  let teams = [
+    { name: "Driftless Hockey Club", odds: 300 },
+    { name: "Rockaway Brattwursts", odds: 200 },
+    { name: "Bowness Ice Beavers", odds: 150 },
+    { name: "Mt Pearl Vikings", odds: 120 },
+    { name: "Scotty", odds: 100 },
+    { name: "Potomac Poutine", odds: 60 },
+    { name: "Maplewood HC", odds: 50 },
+    { name: "Cantuar Slough Sharks", odds: 20 }
+  ];
+  let remainingTeams = [];
+  let picks = [];
 
-    function resetLottery() {
-      remainingTeams = JSON.parse(JSON.stringify(teams));
-      document.getElementById("pickResult").innerText = "";
-      updateTable();
+  function resetLottery() {
+    remainingTeams = JSON.parse(JSON.stringify(teams));
+    picks = [];
+    document.getElementById("pickResult").innerText = "";
+    updateTable();
+    updatePickHistory();
+  }
+
+  function updateTable() {
+    let tbody = document.querySelector("#lotteryTable tbody");
+    tbody.innerHTML = "";
+    let totalOdds = remainingTeams.reduce((sum, t) => sum + t.odds, 0);
+    for (let team of teams) {
+      let tr = document.createElement("tr");
+      let tdName = document.createElement("td");
+      tdName.textContent = team.name;
+      let currentTeam = remainingTeams.find(t => t.name === team.name);
+      let currentOdds = currentTeam ? currentTeam.odds : 0;
+      let tdOdds = document.createElement("td");
+      tdOdds.textContent = totalOdds ? ((currentOdds/totalOdds)*100).toFixed(1)+"%" : "0.0%";
+      tr.appendChild(tdName);
+      tr.appendChild(tdOdds);
+      tbody.appendChild(tr);
     }
+  }
 
-    function updateTable() {
-      let tbody = document.querySelector("#lotteryTable tbody");
-      tbody.innerHTML = "";
-      let totalOdds = remainingTeams.reduce((sum, t) => sum + t.odds, 0);
-      for (let team of remainingTeams) {
-        let tr = document.createElement("tr");
-        let tdName = document.createElement("td");
-        tdName.textContent = team.name;
-        let tdOdds = document.createElement("td");
-        tdOdds.textContent = totalOdds ? ((team.odds/totalOdds)*100).toFixed(1)+"%" : "0.0%";
-        tr.appendChild(tdName);
-        tr.appendChild(tdOdds);
-        tbody.appendChild(tr);
-      }
+  function updatePickHistory() {
+    let pickHistory = document.getElementById("pickHistory");
+    pickHistory.innerHTML = "<h3>Pick History</h3>";
+    if (picks.length === 0) {
+      pickHistory.innerHTML += "<p>No picks yet.</p>";
+    } else {
+      let ol = document.createElement("ol");
+      picks.forEach(p => {
+        let li = document.createElement("li");
+        li.textContent = p;
+        ol.appendChild(li);
+      });
+      pickHistory.appendChild(ol);
     }
+  }
 
-    function drawPick() {
-      if (remainingTeams.length === 0) {
-        document.getElementById("pickResult").innerText = "All picks completed!";
+  function drawPick() {
+    if (remainingTeams.length === 0) {
+      document.getElementById("pickResult").innerText = "All picks completed!";
+      return;
+    }
+    let totalOdds = remainingTeams.reduce((sum, t) => sum + t.odds, 0);
+    let rand = Math.random() * totalOdds;
+    let cumulative = 0;
+    for (let i = 0; i < remainingTeams.length; i++) {
+      cumulative += remainingTeams[i].odds;
+      if (rand <= cumulative) {
+        let picked = remainingTeams[i];
+        document.getElementById("pickResult").innerText = `Selected: ${picked.name}`;
+        picks.push(picked.name);
+        // Set picked team's odds to 0 but do not remove from teams list
+        remainingTeams[i].odds = 0;
+        remainingTeams.splice(i, 1);
+        updateTable();
+        updatePickHistory();
         return;
       }
-      let totalOdds = remainingTeams.reduce((sum, t) => sum + t.odds, 0);
-      let rand = Math.random() * totalOdds;
-      let cumulative = 0;
-      for (let i = 0; i < remainingTeams.length; i++) {
-        cumulative += remainingTeams[i].odds;
-        if (rand <= cumulative) {
-          let picked = remainingTeams[i];
-          document.getElementById("pickResult").innerText = `Selected: ${picked.name}`;
-          picked.odds = 0;
-          remainingTeams.splice(i, 1);
-          updateTable();
-          return;
-        }
-      }
     }
+  }
 
-    window.onload = resetLottery;
-  </script>
+  window.onload = resetLottery;
+</script>
+  
+<div id="pickHistory"></div>
+
 </body>
 </html>
