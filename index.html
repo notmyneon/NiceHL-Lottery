@@ -106,6 +106,7 @@
 
   <button onclick="drawPick()">Draw Team</button>
   <button onclick="resetLottery()">Reset</button>
+  <button onclick="playMusic()">Play Music</button>
 
   <div id="pickResult"></div>
 
@@ -116,6 +117,9 @@
 
   <!-- Winner announcement -->
   <div id="winnerDisplay"></div>
+
+  <!-- Audio -->
+  <audio id="bgMusic" src="lottery-theme.mp3" preload="auto"></audio>
 
   <script>
     let teams = [
@@ -196,7 +200,6 @@
           updateTable();
           updatePickHistory();
 
-          // If this was the last pick, show winner display
           if (remainingTeams.length === 0) {
             showWinner(picks[0]); // First pick is the winner
           }
@@ -208,19 +211,24 @@
 
     function showWinner(teamName) {
       const winnerDiv = document.getElementById("winnerDisplay");
-      const safeName = teamName.replace(/[^a-z0-9]/gi, '_'); // Basic sanitization
-      const imgPath = `${teamName}.png`; // assuming all team logos are in the same directory and named exactly
+      const imgPath = `${teamName}.png`;
 
       winnerDiv.innerHTML = `
         <h2>🏆 Congratulations to ${teamName} for winning the #1 pick! 🏆</h2>
         <img src="${imgPath}" alt="${teamName} logo">
       `;
+
+      playMusic();
+    }
+
+    function playMusic() {
+      const audio = document.getElementById("bgMusic");
+      audio.play().catch(error => {
+        console.log("Autoplay blocked or file not found:", error);
+      });
     }
 
     window.onload = resetLottery;
   </script>
-  <audio id="bgMusic" src="lottery-theme.mp3" preload="auto"></audio>
-<button onclick="playMusic()">Play Music</button>
-
 </body>
 </html>
