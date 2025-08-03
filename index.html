@@ -1,159 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NiceHL Draft Lottery</title>
   <style>
     body {
+      background-color: black;
+      color: white;
       font-family: sans-serif;
+      text-align: center;
+      margin: 0;
       padding: 20px;
-      background: #000;
-      color: #fff;
+    }
+    img.logo {
+      max-width: 300px;
+      margin-bottom: 20px;
     }
     table {
+      margin: 20px auto;
       border-collapse: collapse;
-      margin-bottom: 20px;
-      width: 100%;
+      width: 90%;
     }
     th, td {
-      border: 1px solid #444;
+      border: 1px solid white;
       padding: 8px 12px;
-      text-align: center;
-    }
-    th {
-      background: #222;
-      color: #fff;
-    }
-    td {
-      background: #111;
     }
     button {
-      padding: 10px 18px;
-      margin-right: 10px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
       cursor: pointer;
-    }
-    button:hover {
-      background: #555;
-    }
-    ol {
-      background: #111;
-      padding: 10px;
-      border: 1px solid #444;
-    }
-    h1 {
-      margin-top: 0;
-      font-size: 28px;
-      color: #fff;
     }
   </style>
 </head>
 <body>
-
+  <img src="./_a9d6c082-6247-4ceb-8182-888.png" alt="NiceHL Logo" class="logo"/>
   <h1>NiceHL Draft Lottery</h1>
-
-  <table id="teamTable">
+  <table id="lotteryTable">
     <thead>
-      <tr>
-        <th>Team</th>
-        <th>Combinations</th>
-        <th>Active</th>
-        <th>Current Odds %</th>
-      </tr>
+      <tr><th>Team</th><th>Current Odds</th></tr>
     </thead>
-    <tbody>
-      <tr><td>Driftless Hockey Club</td><td>300</td><td>1</td><td></td></tr>
-      <tr><td>Rockaway Brattwursts</td><td>200</td><td>1</td><td></td></tr>
-      <tr><td>Bowness Ice Beavers</td><td>150</td><td>1</td><td></td></tr>
-      <tr><td>Mt Pearl Vikings</td><td>120</td><td>1</td><td></td></tr>
-      <tr><td>Scotty</td><td>100</td><td>1</td><td></td></tr>
-      <tr><td>Potomac Poutine</td><td>60</td><td>1</td><td></td></tr>
-      <tr><td>Maplewood HC</td><td>50</td><td>1</td><td></td></tr>
-      <tr><td>Cantuar Slough Sharks</td><td>20</td><td>1</td><td></td></tr>
-    </tbody>
+    <tbody></tbody>
   </table>
-
+  <h2 id="pickResult"></h2>
   <button onclick="drawPick()">Draw Next Pick</button>
-  <button onclick="resetLottery()">Reset</button>
-
-  <h3>Draft Order:</h3>
-  <ol id="pickList"></ol>
+  <button onclick="resetLottery()">Reset Lottery</button>
 
   <script>
-    let picks = [];
+    let teams = [
+      { name: "Driftless Hockey Club", odds: 300 },
+      { name: "Rockaway Brattwursts", odds: 200 },
+      { name: "Bowness Ice Beavers", odds: 150 },
+      { name: "Mt Pearl Vikings", odds: 120 },
+      { name: "Scotty", odds: 100 },
+      { name: "Potomac Poutine", odds: 60 },
+      { name: "Maplewood HC", odds: 50 },
+      { name: "Cantuar Slough Sharks", odds: 20 }
+    ];
+    let remainingTeams = [];
 
-    function getActiveTeams() {
-      const rows = document.querySelectorAll('#teamTable tbody tr');
-      const teams = [];
-      rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const name = cells[0].innerText;
-        const combos = parseFloat(cells[1].innerText);
-        const active = parseInt(cells[2].innerText);
-        if (active === 1) {
-          teams.push({ name, combos, row });
-        }
-      });
-      return teams;
+    function resetLottery() {
+      remainingTeams = JSON.parse(JSON.stringify(teams));
+      document.getElementById("pickResult").innerText = "";
+      updateTable();
     }
 
-    function updateOddsDisplay() {
-      const rows = document.querySelectorAll('#teamTable tbody tr');
-      const activeTeams = getActiveTeams();
-      const totalCombos = activeTeams.reduce((sum, t) => sum + t.combos, 0);
-
-      rows.forEach(row => {
-        const active = parseInt(row.cells[2].innerText);
-        const combos = parseFloat(row.cells[1].innerText);
-        if (active === 0) {
-          row.cells[3].innerText = "0.0%";
-        } else {
-          const percent = ((combos / totalCombos) * 100).toFixed(1);
-          row.cells[3].innerText = percent + "%";
-        }
-      });
+    function updateTable() {
+      let tbody = document.querySelector("#lotteryTable tbody");
+      tbody.innerHTML = "";
+      let totalOdds = remainingTeams.reduce((sum, t) => sum + t.odds, 0);
+      for (let team of remainingTeams) {
+        let tr = document.createElement("tr");
+        let tdName = document.createElement("td");
+        tdName.textContent = team.name;
+        let tdOdds = document.createElement("td");
+        tdOdds.textContent = totalOdds ? ((team.odds/totalOdds)*100).toFixed(1)+"%" : "0.0%";
+        tr.appendChild(tdName);
+        tr.appendChild(tdOdds);
+        tbody.appendChild(tr);
+      }
     }
 
     function drawPick() {
-      if (picks.length >= 8) {
-        alert("All picks have been made!");
+      if (remainingTeams.length === 0) {
+        document.getElementById("pickResult").innerText = "All picks completed!";
         return;
       }
-
-      const teams = getActiveTeams();
-      const totalCombos = teams.reduce((sum, t) => sum + t.combos, 0);
-      if (totalCombos === 0) return;
-
-      const r = Math.random() * totalCombos;
+      let totalOdds = remainingTeams.reduce((sum, t) => sum + t.odds, 0);
+      let rand = Math.random() * totalOdds;
       let cumulative = 0;
-      for (let t of teams) {
-        cumulative += t.combos;
-        if (r <= cumulative) {
-          picks.push(t.name);
-          document.getElementById("pickList").innerHTML += `<li>${t.name}</li>`;
-          t.row.cells[2].innerText = "0"; // deactivate
-          t.row.cells[3].innerText = "0.0%"; // show 0% odds
-          updateOddsDisplay(); // recalculate others
+      for (let i = 0; i < remainingTeams.length; i++) {
+        cumulative += remainingTeams[i].odds;
+        if (rand <= cumulative) {
+          let picked = remainingTeams[i];
+          document.getElementById("pickResult").innerText = `Selected: ${picked.name}`;
+          picked.odds = 0;
+          remainingTeams.splice(i, 1);
+          updateTable();
           return;
         }
       }
     }
 
-    function resetLottery() {
-      const rows = document.querySelectorAll('#teamTable tbody tr');
-      rows.forEach(row => {
-        row.cells[2].innerText = "1"; // reactivate
-        row.cells[3].innerText = "";  // clear odds
-      });
-      picks = [];
-      document.getElementById("pickList").innerHTML = "";
-      updateOddsDisplay();
-    }
-
-    window.onload = updateOddsDisplay;
+    window.onload = resetLottery;
   </script>
-
 </body>
 </html>
