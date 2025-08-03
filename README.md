@@ -1,5 +1,3 @@
-# NiceHL-Lottery
-NiceHL Draft Lottery Simulator
 <!DOCTYPE html>
 <html lang="en">
 <head>
