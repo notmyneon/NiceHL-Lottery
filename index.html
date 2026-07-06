@@ -454,8 +454,8 @@
 
     .ball {
       position: absolute;
-      width: 26px;
-      height: 26px;
+      width: 30px;
+      height: 30px;
       border-radius: 999px;
       display: grid;
       place-items: center;
@@ -637,6 +637,49 @@
       font-weight: 950;
       letter-spacing: -0.04em;
     }
+    .ticker .big {
+      line-height: 1.15;
+    }
+
+    .final-three-list {
+      margin-top: 8px;
+      display: grid;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .final-three-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .final-three-team {
+      min-width: 0;
+      font-size: clamp(1.05rem, 3vw, 1.45rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .final-three-odds {
+      font-size: 0.94rem;
+      font-weight: 950;
+      color: var(--silver-2);
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
 
     .result-board {
       display: grid;
@@ -901,7 +944,7 @@
         <h1><span>NiceHL</span><br />Draft Lottery</h1>
         <p class="subtitle">
           Sim the entire lottery first, then reveal the draft order from the last pick down to the first pick.
-          A 100-ball chamber shows each team's odds visually, with team logos rendered directly on the chamber balls, alongside a 16-team logo library and a suspense-first reveal board. In the final moment, Pick 1 and Pick 2 appear together on the board.
+          A 100-ball chamber shows each team's odds visually, with larger team-logo balls and a clean Final 3 display that lists each remaining team on its own line with its odds. In the final moment, Pick 1 and Pick 2 appear together on the board.
         </p>
       </section>
 
@@ -978,7 +1021,7 @@
               <button id="shareBtn">Copy Setup Link</button>
             </div>
             <p class="note">
-              Logos use paths like <strong>assets/team-logos/team-name/logo.svg</strong>. Replace the placeholder logos in those folders with your real team logos. The lottery chamber uses a 100-ball visual split based on team odds, and each ball now uses the team logo when available. Team names can be selected from the built-in 16-team logo library, which reduces spelling/path mistakes.
+              Logos use paths like <strong>assets/team-logos/team-name/logo.svg</strong>. Replace the placeholder logos in those folders with your real team logos. The lottery chamber uses a 100-ball visual split based on team odds, each ball uses the team logo when available, and the Final 3 display now shows each remaining team on its own line with its odds. Team names can be selected from the built-in 16-team logo library, which reduces spelling/path mistakes.
             </p>
           </div>
         </div>
@@ -1328,12 +1371,12 @@
           node.innerHTML = logoTag(team);
           el.chamber.appendChild(node);
 
-          const radius = 13;
+          const radius = 15;
           balls.push({
             node,
             team,
-            x: 18 + randomFloat() * Math.max(40, width - 36),
-            y: 18 + randomFloat() * Math.max(40, height - 36),
+            x: 20 + randomFloat() * Math.max(40, width - 40),
+            y: 20 + randomFloat() * Math.max(40, height - 40),
             vx: (randomFloat() - 0.5) * 1.6,
             vy: (randomFloat() - 0.5) * 1.6,
             radius,
@@ -1489,11 +1532,13 @@
         const reveal = revealOrder[i];
 
         if (reveal.pick === 3 && drawCount > 3) {
-          const finalThree = completeOrder.filter(team => team.pick <= 3).sort((a, b) => a.pick - b.pick);
+          const finalThree = completeOrder
+            .filter(team => team.pick <= 3)
+            .sort((a, b) => Number(b.odds) - Number(a.odds) || a.name.localeCompare(b.name));
           buildBalls(finalThree);
           hideWinnerBall();
-          setTicker("Final 3 Remaining", finalThree.map(team => team.name).join(" • "));
-          await sleep(4500);
+          showFinalThree(finalThree);
+          await sleep(5000);
         }
 
         const poolForVisual = validTeams.filter(team => !results.some(result => result.name === team.name));
@@ -1799,6 +1844,20 @@
     function setTicker(small, big) {
       el.tickerSmall.textContent = small;
       el.tickerBig.textContent = big;
+    }
+
+    function showFinalThree(teams) {
+      el.tickerSmall.textContent = "Final 3 Remaining";
+      el.tickerBig.innerHTML = `
+        <div class="final-three-list">
+          ${teams.map(team => `
+            <div class="final-three-row">
+              <div class="final-three-team">${escapeHtml(team.name)}</div>
+              <div class="final-three-odds">${escapeHtml(team.startChance || "")}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
     function persist() {
