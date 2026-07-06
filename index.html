@@ -1264,7 +1264,34 @@
         el.leagueLogoBadge.innerHTML = "<span>LOGO</span>";
         return;
       }
-      el.leagueLogoBadge.innerHTML = `<img src="${escapeAttribute(src)}" alt="League logo" onerror="this.remove(); this.parentElement.innerHTML='<span>LOGO</span>';" />`;
+
+      el.leagueLogoBadge.innerHTML = `<img
+        src="${escapeAttribute(src)}"
+        data-fallbacks="${escapeAttribute(getLogoFallbacks(src).join("|"))}"
+        data-fallback-index="0"
+        alt="League logo"
+        onerror="handleLeagueLogoError(this);"
+      />`;
+    }
+
+    function handleLeagueLogoError(img) {
+      const parent = img.parentElement;
+      const fallbacks = String(img.dataset.fallbacks || "")
+        .split("|")
+        .map(path => path.trim())
+        .filter(Boolean);
+
+      const index = Number(img.dataset.fallbackIndex || 0);
+
+      if (index < fallbacks.length) {
+        img.dataset.fallbackIndex = String(index + 1);
+        img.src = fallbacks[index];
+        return;
+      }
+
+      if (parent) {
+        parent.innerHTML = "<span>LOGO</span>";
+      }
     }
 
     function buildBalls(pool) {
@@ -1667,25 +1694,60 @@
     function renderLogoImage(team, fallback) {
       const src = team.logo || suggestedLogoPath(team.name);
       if (!src) return `<span>${escapeHtml(fallback)}</span>`;
-      const fallbackSrc = src.endsWith(".png") ? src.replace(/\.png$/, ".svg") : "";
-      return `<img src="${escapeAttribute(src)}" data-fallback-src="${escapeAttribute(fallbackSrc)}" alt="${escapeAttribute(team.name)} logo" onerror="handleLogoError(this, '${escapeAttribute(fallback)}');" />`;
+
+      return `<img
+        src="${escapeAttribute(src)}"
+        data-fallbacks="${escapeAttribute(getLogoFallbacks(src).join("|"))}"
+        data-fallback-index="0"
+        alt="${escapeAttribute(team.name)} logo"
+        onerror="handleLogoError(this, '${escapeAttribute(fallback)}');"
+      />`;
+    }
+
+    function getLogoFallbacks(src) {
+      const clean = String(src || "").trim();
+      const fallbacks = [];
+
+      if (/\.png$/i.test(clean)) {
+        fallbacks.push(clean.replace(/\.png$/i, ".PNG"));
+        fallbacks.push(clean.replace(/\.png$/i, ".svg"));
+      } else if (/\.svg$/i.test(clean)) {
+        fallbacks.push(clean.replace(/\.svg$/i, ".png"));
+        fallbacks.push(clean.replace(/\.svg$/i, ".PNG"));
+      }
+
+      return [...new Set(fallbacks)].filter(path => path && path !== clean);
     }
 
     function handleLogoError(img, fallbackText) {
-      const fallbackSrc = img.dataset.fallbackSrc;
-      if (fallbackSrc && !img.dataset.usedFallback) {
-        img.dataset.usedFallback = "true";
-        img.src = fallbackSrc;
+      const parent = img.parentElement;
+      const fallbacks = String(img.dataset.fallbacks || "")
+        .split("|")
+        .map(path => path.trim())
+        .filter(Boolean);
+
+      const index = Number(img.dataset.fallbackIndex || 0);
+
+      if (index < fallbacks.length) {
+        img.dataset.fallbackIndex = String(index + 1);
+        img.src = fallbacks[index];
         return;
       }
-      img.remove();
-      if (img.parentElement) img.parentElement.textContent = fallbackText;
+
+      if (parent) {
+        parent.innerHTML = `<span>${escapeHtml(fallbackText)}</span>`;
+      }
     }
 
     function logoTag(team) {
       const src = team.logo || suggestedLogoPath(team.name);
-      const fallbackSrc = src.endsWith(".png") ? src.replace(/\.png$/, ".svg") : "";
-      return `<img src="${escapeAttribute(src)}" data-fallback-src="${escapeAttribute(fallbackSrc)}" alt="${escapeAttribute(team.name)} logo" onerror="handleLogoError(this, '${escapeAttribute(abbreviate(team.name))}');" />`;
+      return `<img
+        src="${escapeAttribute(src)}"
+        data-fallbacks="${escapeAttribute(getLogoFallbacks(src).join("|"))}"
+        data-fallback-index="0"
+        alt="${escapeAttribute(team.name)} logo"
+        onerror="handleLogoError(this, '${escapeAttribute(abbreviate(team.name))}');"
+      />`;
     }
 
     function setTicker(small, big) {
