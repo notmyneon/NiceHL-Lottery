@@ -454,8 +454,8 @@
 
     .ball {
       position: absolute;
-      width: 30px;
-      height: 30px;
+      width: 34px;
+      height: 34px;
       border-radius: 999px;
       display: grid;
       place-items: center;
@@ -493,8 +493,8 @@
       z-index: 2;
       padding: 1px 3px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.78);
-      font-size: 0.32rem;
+      background: rgba(255,255,255,0.80);
+      font-size: 0.31rem;
       line-height: 1;
       display: inline-block;
     }
@@ -502,9 +502,9 @@
     .winner-ball {
       position: absolute;
       left: 50%;
-      bottom: 146px;
-      width: 82px;
-      height: 82px;
+      bottom: 150px;
+      width: 92px;
+      height: 92px;
       transform: translateX(-50%) scale(0);
       border-radius: 999px;
       display: grid;
@@ -525,8 +525,8 @@
     }
 
     .winner-ball img {
-      width: 82%;
-      height: 82%;
+      width: 84%;
+      height: 84%;
       object-fit: contain;
     }
 
@@ -850,17 +850,22 @@
 
     .confetti span {
       position: absolute;
-      width: 10px;
-      height: 16px;
-      top: -24px;
-      opacity: 0.9;
-      animation: fall 2.8s linear forwards;
+      width: 12px;
+      height: 22px;
+      top: -28px;
+      opacity: 0.98;
+      border-radius: 2px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.18);
+      animation: fall 5.2s linear forwards;
     }
 
     @keyframes fall {
-      to {
-        transform: translateY(calc(100vh + 70px)) rotate(720deg);
-        opacity: 0.2;
+      0% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(calc(100vh + 90px)) rotate(1080deg);
+        opacity: 0.28;
       }
     }
 
@@ -917,9 +922,9 @@
       }
 
       .winner-ball {
-        bottom: 154px;
-        width: 74px;
-        height: 74px;
+        bottom: 156px;
+        width: 82px;
+        height: 82px;
       }
 
       .chamber {
@@ -950,7 +955,7 @@
         <h1><span>NiceHL</span><br />Draft Lottery</h1>
         <p class="subtitle">
           Sim the entire lottery first, then reveal the draft order from the last pick down to the first pick.
-          A 100-ball chamber shows each team's odds visually, with larger team-logo balls, a clean Final 3 display, and the selected reveal ball moved upward so it stays visible above the team-name panel. In the final moment, Pick 1 and Pick 2 appear together on the board.
+          A 100-ball chamber shows each team's odds visually, with larger team-logo balls, a cleaner selected reveal ball that shows just the logo, and longer, more noticeable confetti at the finish. In the final moment, Pick 1 and Pick 2 appear together on the board.
         </p>
       </section>
 
@@ -1377,12 +1382,12 @@
           node.innerHTML = logoTag(team);
           el.chamber.appendChild(node);
 
-          const radius = 15;
+          const radius = 17;
           balls.push({
             node,
             team,
-            x: 20 + randomFloat() * Math.max(40, width - 40),
-            y: 20 + randomFloat() * Math.max(40, height - 40),
+            x: 22 + randomFloat() * Math.max(44, width - 44),
+            y: 22 + randomFloat() * Math.max(44, height - 44),
             vx: (randomFloat() - 0.5) * 1.6,
             vy: (randomFloat() - 0.5) * 1.6,
             radius,
@@ -1640,7 +1645,7 @@
 
     function showWinnerBall(team) {
       el.winnerBall.classList.remove("show");
-      el.winnerBall.innerHTML = team.logo ? `${logoTag(team)}<span>${abbreviate(team.name)}</span>` : `<span>${abbreviate(team.name)}</span>`;
+      el.winnerBall.innerHTML = team.logo ? `${logoTag(team)}` : `<span>${abbreviate(team.name)}</span>`;
       el.winnerBall.querySelector("img")?.addEventListener("error", event => event.target.remove());
       el.winnerBall.style.background = ballBackground(team.color);
       void el.winnerBall.offsetWidth;
@@ -1951,19 +1956,21 @@
       el.confetti.innerHTML = "";
       const colors = ["#b80820", "#710017", "#ffffff", "#b6bcc6", "#111111"];
 
-      for (let i = 0; i < 130; i++) {
+      for (let i = 0; i < 220; i++) {
         const piece = document.createElement("span");
         piece.style.left = `${randomFloat() * 100}%`;
         piece.style.background = colors[Math.floor(randomFloat() * colors.length)];
-        piece.style.animationDelay = `${randomFloat() * 0.55}s`;
-        piece.style.animationDuration = `${2 + randomFloat() * 1.75}s`;
+        piece.style.animationDelay = `${randomFloat() * 0.8}s`;
+        piece.style.animationDuration = `${4.2 + randomFloat() * 2.4}s`;
         piece.style.transform = `rotate(${randomFloat() * 360}deg)`;
+        piece.style.width = `${8 + randomFloat() * 8}px`;
+        piece.style.height = `${14 + randomFloat() * 16}px`;
         el.confetti.appendChild(piece);
       }
 
       setTimeout(() => {
         el.confetti.innerHTML = "";
-      }, 4500);
+      }, 8000);
     }
 
     function toast(message) {
