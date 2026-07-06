@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -882,6 +881,8 @@
   <div class="glow-orb"></div>
   <div class="confetti" id="confetti"></div>
 
+  <datalist id="teamNameOptions"></datalist>
+
   <main class="wrap">
     <header>
       <section class="hero">
@@ -889,7 +890,7 @@
         <h1><span>NiceHL</span><br />Draft Lottery</h1>
         <p class="subtitle">
           Sim the entire lottery first, then reveal the draft order from the last pick down to the first pick.
-          A 100-ball chamber shows each team's odds visually, alongside team logos, animated lottery balls, and a suspense-first reveal board. In the final moment, Pick 1 and Pick 2 appear together on the board.
+          A 100-ball chamber shows each team's odds visually, alongside a 16-team logo library, animated lottery balls, and a suspense-first reveal board. In the final moment, Pick 1 and Pick 2 appear together on the board.
         </p>
       </section>
 
@@ -966,7 +967,7 @@
               <button id="shareBtn">Copy Setup Link</button>
             </div>
             <p class="note">
-              Logos use paths like <strong>assets/team-logos/team-name/logo.svg</strong>. Replace the placeholder logos in those folders with your real team logos. The lottery chamber uses a 100-ball visual split based on team odds.
+              Logos use paths like <strong>assets/team-logos/team-name/logo.svg</strong>. Replace the placeholder logos in those folders with your real team logos. The lottery chamber uses a 100-ball visual split based on team odds. Team names can be selected from the built-in 16-team logo library, which reduces spelling/path mistakes.
             </p>
           </div>
         </div>
@@ -1005,16 +1006,31 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const defaultTeams = [
-      { name: "Rockaway Brattwursts", odds: 18.5, color: "#7a0019", logo: "assets/team-logos/rockaway-brattwursts/logo.svg" },
-      { name: "Cantuar Slough Sharks", odds: 16.5, color: "#b6bcc6", logo: "assets/team-logos/cantuar-slough-sharks/logo.svg" },
-      { name: "Last Mountain Walleye", odds: 14, color: "#9b111e", logo: "assets/team-logos/last-mountain-walleye/logo.svg" },
-      { name: "Southside Hellbats", odds: 12, color: "#111111", logo: "assets/team-logos/southside-hellbats/logo.svg" },
-      { name: "Bowness Ice Beavers", odds: 10.5, color: "#ffffff", logo: "assets/team-logos/bowness-ice-beavers/logo.svg" },
-      { name: "Taku River Glaciers", odds: 9, color: "#8c8f96", logo: "assets/team-logos/taku-river-glaciers/logo.svg" },
-      { name: "Woodland Whistle Pigs", odds: 7.5, color: "#5a0616", logo: "assets/team-logos/woodland-whistle-pigs/logo.svg" },
-      { name: "Alberta Cobra Chickens", odds: 5.5, color: "#d6d9df", logo: "assets/team-logos/alberta-cobra-chickens/logo.svg" }
+    const TEAM_LOGO_LIBRARY = [
+      { name: "Alberta Cobra Chickens", aliases: [], logo: "assets/team-logos/alberta-cobra-chickens/logo.png", color: "#b80820" },
+      { name: "Bowness Ice Beavers", aliases: [], logo: "assets/team-logos/bowness-ice-beavers/logo.png", color: "#b6bcc6" },
+      { name: "Cantuar Slough Sharks", aliases: [], logo: "assets/team-logos/cantuar-slough-sharks/logo.png", color: "#710017" },
+      { name: "Driftless HC", aliases: ["Minnesota Frozen Pines"], logo: "assets/team-logos/driftless-hc/logo.png", color: "#111111" },
+      { name: "Last Mountain Walleye", aliases: ["Maplewood HC"], logo: "assets/team-logos/last-mountain-walleye/logo.png", color: "#d6d9df" },
+      { name: "Les Rois de Lyon", aliases: [], logo: "assets/team-logos/les-rois-de-lyon/logo.png", color: "#8c8f96" },
+      { name: "Mount Pearl Vikings", aliases: ["Mt Pearl Vikings"], logo: "assets/team-logos/mount-pearl-vikings/logo.png", color: "#5a0616" },
+      { name: "Pennant Pumpjacks", aliases: [], logo: "assets/team-logos/pennant-pumpjacks/logo.png", color: "#ffffff" },
+      { name: "Rockaway Brattwursts", aliases: ["Cachco Eagles"], logo: "assets/team-logos/rockaway-brattwursts/logo.png", color: "#7a0019" },
+      { name: "Rotterdam Red Foxes", aliases: [], logo: "assets/team-logos/rotterdam-red-foxes/logo.png", color: "#b80820" },
+      { name: "Southside Hellbats", aliases: ["Slick City Jackals"], logo: "assets/team-logos/southside-hellbats/logo.png", color: "#111111" },
+      { name: "Steel Valley Fishercats", aliases: ["Steel Valley Fishers"], logo: "assets/team-logos/steel-valley-fishercats/logo.png", color: "#b6bcc6" },
+      { name: "Synth City Sphynx", aliases: ["Synth City"], logo: "assets/team-logos/synth-city-sphynx/logo.png", color: "#710017" },
+      { name: "Taku River Glaciers", aliases: [], logo: "assets/team-logos/taku-river-glaciers/logo.png", color: "#d6d9df" },
+      { name: "Woodland Whistle Pigs", aliases: [], logo: "assets/team-logos/woodland-whistle-pigs/logo.png", color: "#5a0616" },
+      { name: "Team 16", aliases: [], logo: "assets/team-logos/team-16/logo.png", color: "#8c8f96" },
     ];
+
+    const defaultTeams = TEAM_LOGO_LIBRARY.slice(0, 8).map((team, index) => ({
+      name: team.name,
+      odds: [18.5, 16.5, 14, 12, 10.5, 9, 7.5, 5.5][index] || 1,
+      color: team.color,
+      logo: team.logo
+    }));
 
     let teams = loadInitialTeams();
     let results = [];
@@ -1025,6 +1041,7 @@
 
     const el = {
       teamList: document.getElementById("teamList"),
+      teamNameOptions: document.getElementById("teamNameOptions"),
       results: document.getElementById("results"),
       machine: document.getElementById("machine"),
       chamber: document.getElementById("chamber"),
@@ -1121,12 +1138,24 @@
       const savedFullOrder = localStorage.getItem("lotteryFullOrder");
       if (savedFullOrder !== null) el.fullOrderToggle.checked = savedFullOrder === "true";
 
+      renderTeamOptions();
       renderTeams();
       renderStats();
       renderLeagueLogo();
       buildBalls(teams);
       renderResults();
       updateJsonBox();
+    }
+
+    function renderTeamOptions() {
+      const names = [];
+      TEAM_LOGO_LIBRARY.forEach(team => {
+        names.push(team.name);
+        (team.aliases || []).forEach(alias => names.push(alias));
+      });
+      el.teamNameOptions.innerHTML = names
+        .map(name => `<option value="${escapeAttribute(name)}"></option>`)
+        .join("");
     }
 
     function renderTeams() {
@@ -1145,7 +1174,7 @@
         row.innerHTML = `
           <div class="rank">${index + 1}</div>
           <div class="logo-preview">${renderLogoImage(team, abbreviate(team.name))}</div>
-          <input aria-label="Team name" value="${escapeHtml(team.name)}" />
+          <input aria-label="Team name" list="teamNameOptions" value="${escapeHtml(team.name)}" />
           <input aria-label="Team odds" type="number" min="0" step="0.1" value="${Number(team.odds)}" />
           <input aria-label="Team colour" type="color" value="${validColor(team.color)}" />
           <button class="remove" aria-label="Remove team">×</button>
@@ -1161,7 +1190,12 @@
 
         nameInput.addEventListener("input", (event) => {
           teams[index].name = event.target.value;
-          if (!teams[index].logo || teams[index].logo.includes("team-logos/")) {
+          const libraryTeam = getLibraryTeam(event.target.value);
+          if (libraryTeam) {
+            teams[index].logo = libraryTeam.logo;
+            teams[index].color = teams[index].color || libraryTeam.color;
+            logoInput.value = teams[index].logo;
+          } else if (!teams[index].logo || teams[index].logo.includes("team-logos/")) {
             teams[index].logo = suggestedLogoPath(event.target.value);
             logoInput.value = teams[index].logo;
           }
@@ -1589,6 +1623,24 @@
       return words.map(word => word[0]).join("").slice(0, 4).toUpperCase();
     }
 
+    function normalizeTeamName(name) {
+      return String(name || "")
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, "")
+        .trim();
+    }
+
+    function getLibraryTeam(name) {
+      const normalized = normalizeTeamName(name);
+      if (!normalized) return null;
+
+      return TEAM_LOGO_LIBRARY.find(team => {
+        const names = [team.name, ...(team.aliases || [])];
+        return names.some(candidate => normalizeTeamName(candidate) === normalized);
+      }) || null;
+    }
+
     function slugify(name) {
       return String(name || "team")
         .toLowerCase()
@@ -1598,7 +1650,9 @@
     }
 
     function suggestedLogoPath(name) {
-      return `assets/team-logos/${slugify(name)}/logo.svg`;
+      const libraryTeam = getLibraryTeam(name);
+      if (libraryTeam) return libraryTeam.logo;
+      return `assets/team-logos/${slugify(name)}/logo.png`;
     }
 
     function ballBackground(color) {
@@ -1613,12 +1667,25 @@
     function renderLogoImage(team, fallback) {
       const src = team.logo || suggestedLogoPath(team.name);
       if (!src) return `<span>${escapeHtml(fallback)}</span>`;
-      return `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(team.name)} logo" onerror="this.remove(); this.parentElement.textContent='${escapeAttribute(fallback)}';" />`;
+      const fallbackSrc = src.endsWith(".png") ? src.replace(/\.png$/, ".svg") : "";
+      return `<img src="${escapeAttribute(src)}" data-fallback-src="${escapeAttribute(fallbackSrc)}" alt="${escapeAttribute(team.name)} logo" onerror="handleLogoError(this, '${escapeAttribute(fallback)}');" />`;
+    }
+
+    function handleLogoError(img, fallbackText) {
+      const fallbackSrc = img.dataset.fallbackSrc;
+      if (fallbackSrc && !img.dataset.usedFallback) {
+        img.dataset.usedFallback = "true";
+        img.src = fallbackSrc;
+        return;
+      }
+      img.remove();
+      if (img.parentElement) img.parentElement.textContent = fallbackText;
     }
 
     function logoTag(team) {
       const src = team.logo || suggestedLogoPath(team.name);
-      return `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(team.name)} logo" />`;
+      const fallbackSrc = src.endsWith(".png") ? src.replace(/\.png$/, ".svg") : "";
+      return `<img src="${escapeAttribute(src)}" data-fallback-src="${escapeAttribute(fallbackSrc)}" alt="${escapeAttribute(team.name)} logo" onerror="handleLogoError(this, '${escapeAttribute(abbreviate(team.name))}');" />`;
     }
 
     function setTicker(small, big) {
@@ -1643,7 +1710,7 @@
         fullOrder: el.fullOrderToggle.checked,
         revealOrder: "reverse with final 3 shown as 3, then Pick 1 and Pick 2 together",
         chamberVisual: "100 lottery balls split by odds",
-        logoFolderPattern: "assets/team-logos/<team-slug>/logo.svg",
+        logoFolderPattern: "assets/team-logos/<team-slug>/logo.png",
         teams: sanitizeTeams(teams)
       };
       el.jsonBox.value = JSON.stringify(setup, null, 2);
@@ -1697,11 +1764,12 @@
         .filter(team => team && String(team.name || "").trim())
         .map((team, index) => {
           const name = String(team.name || `Team ${index + 1}`).trim();
+          const libraryTeam = getLibraryTeam(name);
           return {
             name,
             odds: Math.max(0, Number(team.odds) || 0),
-            color: validColor(team.color),
-            logo: String(team.logo || suggestedLogoPath(name)).trim()
+            color: validColor(team.color || libraryTeam?.color),
+            logo: String(team.logo || libraryTeam?.logo || suggestedLogoPath(name)).trim()
           };
         });
     }
