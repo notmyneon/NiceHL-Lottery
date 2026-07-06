@@ -477,15 +477,26 @@
     }
 
     .ball img {
-      display: none;
+      position: absolute;
+      inset: 3px;
+      width: calc(100% - 6px);
+      height: calc(100% - 6px);
+      object-fit: contain;
+      border-radius: 999px;
+      z-index: 1;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.28));
+      pointer-events: none;
     }
 
     .ball span {
       position: relative;
-      z-index: 1;
+      z-index: 2;
       padding: 1px 3px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.72);
+      background: rgba(255,255,255,0.78);
+      font-size: 0.32rem;
+      line-height: 1;
+      display: inline-block;
     }
 
     .winner-ball {
@@ -890,7 +901,7 @@
         <h1><span>NiceHL</span><br />Draft Lottery</h1>
         <p class="subtitle">
           Sim the entire lottery first, then reveal the draft order from the last pick down to the first pick.
-          A 100-ball chamber shows each team's odds visually, alongside a 16-team logo library, animated lottery balls, and a suspense-first reveal board. In the final moment, Pick 1 and Pick 2 appear together on the board.
+          A 100-ball chamber shows each team's odds visually, with team logos rendered directly on the chamber balls, alongside a 16-team logo library and a suspense-first reveal board. In the final moment, Pick 1 and Pick 2 appear together on the board.
         </p>
       </section>
 
@@ -967,7 +978,7 @@
               <button id="shareBtn">Copy Setup Link</button>
             </div>
             <p class="note">
-              Logos use paths like <strong>assets/team-logos/team-name/logo.svg</strong>. Replace the placeholder logos in those folders with your real team logos. The lottery chamber uses a 100-ball visual split based on team odds. Team names can be selected from the built-in 16-team logo library, which reduces spelling/path mistakes.
+              Logos use paths like <strong>assets/team-logos/team-name/logo.svg</strong>. Replace the placeholder logos in those folders with your real team logos. The lottery chamber uses a 100-ball visual split based on team odds, and each ball now uses the team logo when available. Team names can be selected from the built-in 16-team logo library, which reduces spelling/path mistakes.
             </p>
           </div>
         </div>
@@ -1314,7 +1325,7 @@
           const node = document.createElement("div");
           node.className = "ball";
           node.style.background = ballBackground(team.color);
-          node.innerHTML = `<span>${abbreviate(team.name)}</span>`;
+          node.innerHTML = logoTag(team);
           el.chamber.appendChild(node);
 
           const radius = 13;
@@ -1692,16 +1703,50 @@
     }
 
     function renderLogoImage(team, fallback) {
-      const src = team.logo || suggestedLogoPath(team.name);
+      const candidates = getTeamLogoCandidates(team);
+      const src = candidates[0];
       if (!src) return `<span>${escapeHtml(fallback)}</span>`;
 
       return `<img
         src="${escapeAttribute(src)}"
-        data-fallbacks="${escapeAttribute(getLogoFallbacks(src).join("|"))}"
+        data-fallbacks="${escapeAttribute(candidates.slice(1).join("|"))}"
         data-fallback-index="0"
         alt="${escapeAttribute(team.name)} logo"
         onerror="handleLogoError(this, '${escapeAttribute(fallback)}');"
       />`;
+    }
+
+    function getTeamLogoCandidates(team) {
+      const name = String(team?.name || "").trim();
+      const originalPath = String(team?.logo || "").trim();
+      const exactFolder = name ? `assets/team-logos/${name}/logo.png` : "";
+      const slugFolder = name ? `assets/team-logos/${slugify(name)}/logo.png` : "";
+      const titleFolder = name ? `assets/team-logos/${toTitleFolder(name)}/logo.png` : "";
+      const upperFolder = name ? `assets/team-logos/${name.toUpperCase()}/logo.png` : "";
+
+      const baseCandidates = [
+        originalPath,
+        exactFolder,
+        slugFolder,
+        titleFolder,
+        upperFolder
+      ].filter(Boolean);
+
+      const expanded = [];
+      baseCandidates.forEach(path => {
+        expanded.push(path);
+        getLogoFallbacks(path).forEach(fallback => expanded.push(fallback));
+      });
+
+      return [...new Set(expanded)];
+    }
+
+    function toTitleFolder(name) {
+      return String(name || "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join(" ");
     }
 
     function getLogoFallbacks(src) {
@@ -1740,10 +1785,11 @@
     }
 
     function logoTag(team) {
-      const src = team.logo || suggestedLogoPath(team.name);
+      const candidates = getTeamLogoCandidates(team);
+      const src = candidates[0] || suggestedLogoPath(team.name);
       return `<img
         src="${escapeAttribute(src)}"
-        data-fallbacks="${escapeAttribute(getLogoFallbacks(src).join("|"))}"
+        data-fallbacks="${escapeAttribute(candidates.slice(1).join("|"))}"
         data-fallback-index="0"
         alt="${escapeAttribute(team.name)} logo"
         onerror="handleLogoError(this, '${escapeAttribute(abbreviate(team.name))}');"
