@@ -502,14 +502,14 @@
     .winner-ball {
       position: absolute;
       left: 50%;
-      bottom: 78px;
-      width: 72px;
-      height: 72px;
+      bottom: 146px;
+      width: 82px;
+      height: 82px;
       transform: translateX(-50%) scale(0);
       border-radius: 999px;
       display: grid;
       place-items: center;
-      z-index: 8;
+      z-index: 12;
       background: radial-gradient(circle at 35% 25%, #ffffff, #c9ced6 52%, #8c001b);
       border: 2px solid rgba(255,255,255,0.88);
       box-shadow:
@@ -525,8 +525,8 @@
     }
 
     .winner-ball img {
-      width: 80%;
-      height: 80%;
+      width: 82%;
+      height: 82%;
       object-fit: contain;
     }
 
@@ -536,7 +536,7 @@
       font-weight: 950;
       padding: 4px 7px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.78);
+      background: rgba(255,255,255,0.82);
     }
 
     .league-logo-badge {
@@ -916,6 +916,12 @@
         min-height: 330px;
       }
 
+      .winner-ball {
+        bottom: 154px;
+        width: 74px;
+        height: 74px;
+      }
+
       .chamber {
         inset: 22px 20px 66px;
       }
@@ -944,7 +950,7 @@
         <h1><span>NiceHL</span><br />Draft Lottery</h1>
         <p class="subtitle">
           Sim the entire lottery first, then reveal the draft order from the last pick down to the first pick.
-          A 100-ball chamber shows each team's odds visually, with larger team-logo balls and a clean Final 3 display that lists each remaining team on its own line with its odds. In the final moment, Pick 1 and Pick 2 appear together on the board.
+          A 100-ball chamber shows each team's odds visually, with larger team-logo balls, a clean Final 3 display, and the selected reveal ball moved upward so it stays visible above the team-name panel. In the final moment, Pick 1 and Pick 2 appear together on the board.
         </p>
       </section>
 
